@@ -2,10 +2,12 @@ package main
 
 import (
   "encoding/json"
+  "errors"
   "fmt"
   "io"
-  "os"
   "net/http"
+  "os"
+  "path/filepath"
 )
 
 type ComicInfo struct {
@@ -68,20 +70,46 @@ func getComic(num int) (*ComicInfo, error) {
   return &comicInfo, nil
 }
 
+// create ~/.xkcd folder
+func setupXkcdFolder() error {
+  homeDir, err := os.UserHomeDir()
+  if err != nil {
+    return err
+  }
+
+  xkcdFolder := filepath.Join(homeDir, ".xkcd")
+
+  // check if it exists already
+  _, err = os.Stat(xkcdFolder)
+
+  if errors.Is(err, os.ErrNotExist) {
+    err = os.Mkdir(xkcdFolder, os.ModePerm)
+  }
+
+  return err
+}
+
 func main() {
-  lastComic, err := getLastComic()
+  // lastComic, err := getLastComic()
+  // if err != nil {
+  //   fmt.Printf("xkcd_fetch: failed to get last comic: %s\n", err)
+  //   os.Exit(1)
+  // }
+  //
+  // fmt.Println("last comic number:", lastComic.Num)
+
+  // we ignore the error if it already exists
+  err := setupXkcdFolder()
   if err != nil {
-    fmt.Printf("xkcd_fetch: failed to get last comic: %s\n", err)
+    fmt.Printf("xkcd_fetch: failed create ~/.xkcd folder: %s\n", err)
     os.Exit(1)
   }
 
-  fmt.Println("last comic number:", lastComic.Num)
-
-  comic571, err := getComic(571)
-  if err != nil {
-    fmt.Printf("xkcd_fetch: failed to get comic 571: %s\n", err)
-    os.Exit(1)
-  }
-
-  fmt.Println("comic 571 title:", comic571.Title)
+  // comic571, err := getComic(571)
+  // if err != nil {
+  //   fmt.Printf("xkcd_fetch: failed to get comic 571: %s\n", err)
+  //   os.Exit(1)
+  // }
+  //
+  // fmt.Println("comic 571 title:", comic571.Title)
 }
