@@ -14,10 +14,10 @@ To run:
 
 ```bash
 # to build the index
-go run cmd/xkcd_fetch/main.go
+go run ./cmd/xkcd_fetch
 
 # or
 
 # to find all comics with the search term "banana"
-go run cmd/xkcd/main.go "banana"
+go run ./cmd/xkcd "banana"
 ```
