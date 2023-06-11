@@ -8,6 +8,7 @@ import (
   "net/http"
   "os"
   "path/filepath"
+  "time"
 )
 
 type ComicInfo struct {
@@ -54,6 +55,10 @@ func getLastComic() (*ComicInfo, error) {
 }
 
 func getComic(num int) (*ComicInfo, error) {
+  if num == 404 {
+    return nil, errors.New("Not found page")
+  }
+
   comicUrl := fmt.Sprintf("https://xkcd.com/%d/info.0.json", num)
 
   body, err := getBody(comicUrl)
@@ -115,33 +120,44 @@ func saveComic(comic *ComicInfo) error {
   return err
 }
 
+func downloadComic(num int) {
+  comic, err := getComic(num)
+  if err != nil {
+    fmt.Printf("xkcd_fetch: failed to get comic %d: %s\n", num, err)
+    return
+  }
+
+  err = saveComic(comic)
+  if err != nil {
+    fmt.Printf("xkcd_fetch: failed to save comic %d: %s\n", comic.Num, err)
+    return
+  }
+
+  fmt.Printf("downloaded comic num: %d, title: %s\n", comic.Num, comic.Title)
+}
+
 func main() {
-  // lastComic, err := getLastComic()
-  // if err != nil {
-  //   fmt.Printf("xkcd_fetch: failed to get last comic: %s\n", err)
-  //   os.Exit(1)
-  // }
-  //
-  // fmt.Println("last comic number:", lastComic.Num)
+  lastComic, err := getLastComic()
+  if err != nil {
+    fmt.Printf("xkcd_fetch: failed to get last comic: %s\n", err)
+    os.Exit(1)
+  }
+
+  fmt.Println("last comic number:", lastComic.Num)
 
   // we ignore the error if it already exists
-  err := setupXkcdFolder()
+  err = setupXkcdFolder()
   if err != nil {
     fmt.Printf("xkcd_fetch: failed create ~/.xkcd folder: %s\n", err)
     os.Exit(1)
   }
 
-  comic571, err := getComic(571)
-  if err != nil {
-    fmt.Printf("xkcd_fetch: failed to get comic 571: %s\n", err)
-    os.Exit(1)
-  }
+  for i := 1; i <= lastComic.Num; i++ {
+    go downloadComic(i)
 
-  fmt.Println("comic 571 title:", comic571.Title)
-
-  err = saveComic(comic571)
-  if err != nil {
-    fmt.Printf("xkcd_fetch: failed to save comic %d: %s\n", comic571.Num, err)
-    os.Exit(1)
+    // throttle
+    if i % 10 == 0 {
+      time.Sleep(time.Second)
+    }
   }
 }
