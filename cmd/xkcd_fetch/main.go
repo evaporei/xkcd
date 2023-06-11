@@ -70,14 +70,21 @@ func getComic(num int) (*ComicInfo, error) {
   return &comicInfo, nil
 }
 
+func getXkcdFolder() (string, error) {
+  homeDir, err := os.UserHomeDir()
+  if err != nil {
+    return "", err
+  }
+
+  return filepath.Join(homeDir, ".xkcd"), nil
+}
+
 // create ~/.xkcd folder
 func setupXkcdFolder() error {
-  homeDir, err := os.UserHomeDir()
+  xkcdFolder, err := getXkcdFolder()
   if err != nil {
     return err
   }
-
-  xkcdFolder := filepath.Join(homeDir, ".xkcd")
 
   // check if it exists already
   _, err = os.Stat(xkcdFolder)
