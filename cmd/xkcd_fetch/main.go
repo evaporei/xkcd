@@ -96,6 +96,25 @@ func setupXkcdFolder() error {
   return err
 }
 
+// store comic into file system
+func saveComic(comic *ComicInfo) error {
+  contentBytes, err := json.Marshal(comic)
+  if err != nil {
+    return err
+  }
+
+  xkcdFolder, err := getXkcdFolder()
+  if err != nil {
+    return err
+  }
+
+  comicFilePath := filepath.Join(xkcdFolder, fmt.Sprintf("%d.json", comic.Num))
+
+  err = os.WriteFile(comicFilePath, contentBytes, 0644)
+
+  return err
+}
+
 func main() {
   // lastComic, err := getLastComic()
   // if err != nil {
@@ -112,11 +131,17 @@ func main() {
     os.Exit(1)
   }
 
-  // comic571, err := getComic(571)
-  // if err != nil {
-  //   fmt.Printf("xkcd_fetch: failed to get comic 571: %s\n", err)
-  //   os.Exit(1)
-  // }
-  //
-  // fmt.Println("comic 571 title:", comic571.Title)
+  comic571, err := getComic(571)
+  if err != nil {
+    fmt.Printf("xkcd_fetch: failed to get comic 571: %s\n", err)
+    os.Exit(1)
+  }
+
+  fmt.Println("comic 571 title:", comic571.Title)
+
+  err = saveComic(comic571)
+  if err != nil {
+    fmt.Printf("xkcd_fetch: failed to save comic %d: %s\n", comic571.Num, err)
+    os.Exit(1)
+  }
 }
