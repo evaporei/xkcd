@@ -3,7 +3,7 @@ package main
 import (
   "encoding/json"
   "fmt"
-  "io/ioutil"
+  "io"
   "os"
   "net/http"
 )
@@ -15,22 +15,31 @@ type ComicInfo struct {
 	Title string `json:"title"`
 }
 
-func main() {
-  lastComicUrl := "https://xkcd.com/info.0.json"
-
-  res, err := http.Get(lastComicUrl)
+// Does a GET request and return its body
+func getBody(url string) ([]byte, error) {
+  res, err := http.Get(url)
   if err != nil {
-    fmt.Printf("xkcd_fetch: failed to get last xkcd comic: %s\n", err)
-    os.Exit(1)
+    return nil, err
   }
 
   if res.Body != nil {
     defer res.Body.Close()
   }
 
-  body, err := ioutil.ReadAll(res.Body)
+  body, err := io.ReadAll(res.Body)
   if err != nil {
-    fmt.Printf("xkcd_fetch: failed to read the body of the last xkcd comic: %s\n", err)
+    return nil, err
+  }
+
+  return body, nil
+}
+
+func main() {
+  lastComicUrl := "https://xkcd.com/info.0.json"
+
+  body, err := getBody(lastComicUrl)
+  if err != nil {
+    fmt.Printf("xkcd_fetch: failed to get last comic: %s\n", err)
     os.Exit(1)
   }
 
