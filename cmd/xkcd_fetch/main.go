@@ -34,21 +34,29 @@ func getBody(url string) ([]byte, error) {
   return body, nil
 }
 
-func main() {
+func getLastComic() (*ComicInfo, error) {
   lastComicUrl := "https://xkcd.com/info.0.json"
 
   body, err := getBody(lastComicUrl)
   if err != nil {
-    fmt.Printf("xkcd_fetch: failed to get last comic: %s\n", err)
-    os.Exit(1)
+    return nil, err
   }
 
   lastComicInfo := ComicInfo{}
   err = json.Unmarshal(body, &lastComicInfo)
   if err != nil {
-    fmt.Printf("xkcd_fetch: failed to unmarshal the JSON body of the last xkcd comic: %s\n", err)
+    return nil, err
+  }
+
+  return &lastComicInfo, nil
+}
+
+func main() {
+  lastComic, err := getLastComic()
+  if err != nil {
+    fmt.Printf("xkcd_fetch: failed to get last comic: %s\n", err)
     os.Exit(1)
   }
 
-  fmt.Println("last comic number:", lastComicInfo.Num)
+  fmt.Println("last comic number:", lastComic.Num)
 }
