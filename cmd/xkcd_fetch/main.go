@@ -36,6 +36,7 @@ func fetchLastComic() (*comic.ComicInfo, error) {
   return fetchComic(0)
 }
 
+// get comic from the web
 func fetchComic(num int) (*comic.ComicInfo, error) {
   comicUrl := fmt.Sprintf("https://xkcd.com/%d/info.0.json", num)
 

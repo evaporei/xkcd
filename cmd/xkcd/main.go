@@ -27,17 +27,48 @@ func parseArgs() *Args {
   }
 }
 
+func openXkcdDir() (*os.File, error) {
+  xkcdFolder, err := comic.GetXkcdFolder()
+  if err != nil {
+    return nil, err
+  }
+
+  dir, err := os.Open(xkcdFolder)
+  if err != nil {
+    return nil, err
+  }
+
+  return dir, nil
+}
+
+// get comic from index/storage (~/.xkcd)
+func getComic(name string) (*comic.ComicInfo, error) {
+  xkcdFolder, err := comic.GetXkcdFolder()
+  if err != nil {
+    return nil, err
+  }
+
+  fullPath := filepath.Join(xkcdFolder, name)
+  contents, err := os.ReadFile(fullPath)
+  if err != nil {
+    return nil, err
+  }
+
+  comic := comic.ComicInfo{}
+  err = json.Unmarshal(contents, &comic)
+  if err != nil {
+    return nil, err
+  }
+
+  return &comic, nil
+}
+
 func main() {
   args := parseArgs()
 
-  xkcdFolder, err := comic.GetXkcdFolder()
+  dir, err := openXkcdDir()
   if err != nil {
-    fmt.Println("xkcd: failed to get ~/.xkcd folder")
-    os.Exit(1)
-  }
-  dir, err := os.Open(xkcdFolder)
-  if err != nil {
-    fmt.Println("xkcd: failed to open ~/.xkcd folder")
+    fmt.Println("xkcd: failed to open ~/.xkcd folder:", err)
     os.Exit(1)
   }
 
@@ -51,25 +82,17 @@ func main() {
 
   for _, comicFile := range comicsIterator {
     if comicFile.Mode().IsRegular() {
-      fullPath := filepath.Join(xkcdFolder, comicFile.Name())
-      contents, err := os.ReadFile(fullPath)
+      comic, err := getComic(comicFile.Name())
       if err != nil {
-        fmt.Printf("xkcd: failed to read file '%s' folder\n", fullPath)
-        os.Exit(1)
+        fmt.Printf("xkcd: failed to get comic file '%s'\n", comicFile.Name())
+        continue
       }
 
-      comicInfo := comic.ComicInfo{}
-      err = json.Unmarshal(contents, &comicInfo)
-      if err != nil {
-        fmt.Printf("xkcd: failed to unmarshal file '%s' into ComicInfo structure\n", fullPath)
-        os.Exit(1)
-      }
-
-      if strings.Contains(comicInfo.SafeTitle, args.SearchTerm) ||
-        strings.Contains(comicInfo.Transcript, args.SearchTerm) ||
-        strings.Contains(comicInfo.Title, args.SearchTerm) {
-          fmt.Printf("URL: https://xkcd.com/%d\n", comicInfo.Num)
-          fmt.Printf("Transcript: %s\n", comicInfo.Transcript)
+      if strings.Contains(comic.SafeTitle, args.SearchTerm) ||
+        strings.Contains(comic.Transcript, args.SearchTerm) ||
+        strings.Contains(comic.Title, args.SearchTerm) {
+          fmt.Printf("URL: https://xkcd.com/%d\n", comic.Num)
+          fmt.Printf("Transcript: %s\n", comic.Transcript)
           fmt.Println()
         }
     }
