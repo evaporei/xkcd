@@ -5,7 +5,7 @@ import (
   "path/filepath"
 )
 
-type ComicInfo struct {
+type Comic struct {
   Num int `json:"num"`
 	SafeTitle string `json:"safe_title"`
 	Transcript string `json:"transcript"`

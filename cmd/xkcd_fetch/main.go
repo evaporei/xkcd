@@ -10,7 +10,7 @@ import (
   "path/filepath"
   "time"
 
-  "github.com/evaporei/xkcd/comic"
+  c "github.com/evaporei/xkcd/comic"
 )
 
 // Does a GET request and return its body
@@ -32,12 +32,12 @@ func fetchBody(url string) ([]byte, error) {
   return body, nil
 }
 
-func fetchLastComic() (*comic.ComicInfo, error) {
+func fetchLastComic() (*c.Comic, error) {
   return fetchComic(0)
 }
 
 // get comic from the web
-func fetchComic(num int) (*comic.ComicInfo, error) {
+func fetchComic(num int) (*c.Comic, error) {
   comicUrl := fmt.Sprintf("https://xkcd.com/%d/info.0.json", num)
 
   // fetch last comic
@@ -54,7 +54,7 @@ func fetchComic(num int) (*comic.ComicInfo, error) {
     return nil, err
   }
 
-  comicInfo := comic.ComicInfo{}
+  comicInfo := c.Comic{}
   err = json.Unmarshal(body, &comicInfo)
   if err != nil {
     return nil, err
@@ -65,7 +65,7 @@ func fetchComic(num int) (*comic.ComicInfo, error) {
 
 // create ~/.xkcd folder
 func setupXkcdFolder() error {
-  xkcdFolder, err := comic.GetXkcdFolder()
+  xkcdFolder, err := c.GetXkcdFolder()
   if err != nil {
     return err
   }
@@ -81,13 +81,13 @@ func setupXkcdFolder() error {
 }
 
 // store comic into file system
-func saveComic(comic *comic.ComicInfo) error {
+func saveComic(comic *c.Comic) error {
   contentBytes, err := json.Marshal(comic)
   if err != nil {
     return err
   }
 
-  xkcdFolder, err := comic.GetXkcdFolder()
+  xkcdFolder, err := c.GetXkcdFolder()
   if err != nil {
     return err
   }

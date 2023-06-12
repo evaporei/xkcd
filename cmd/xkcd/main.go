@@ -7,7 +7,7 @@ import (
   "path/filepath"
   "strings"
 
-  "github.com/evaporei/xkcd/comic"
+  c "github.com/evaporei/xkcd/comic"
 )
 
 type Args struct {
@@ -28,7 +28,7 @@ func parseArgs() *Args {
 }
 
 func openXkcdDir() (*os.File, error) {
-  xkcdFolder, err := comic.GetXkcdFolder()
+  xkcdFolder, err := c.GetXkcdFolder()
   if err != nil {
     return nil, err
   }
@@ -42,8 +42,8 @@ func openXkcdDir() (*os.File, error) {
 }
 
 // get comic from index/storage (~/.xkcd)
-func getComic(name string) (*comic.ComicInfo, error) {
-  xkcdFolder, err := comic.GetXkcdFolder()
+func getComic(name string) (*c.Comic, error) {
+  xkcdFolder, err := c.GetXkcdFolder()
   if err != nil {
     return nil, err
   }
@@ -54,13 +54,33 @@ func getComic(name string) (*comic.ComicInfo, error) {
     return nil, err
   }
 
-  comic := comic.ComicInfo{}
+  comic := c.Comic{}
   err = json.Unmarshal(contents, &comic)
   if err != nil {
     return nil, err
   }
 
   return &comic, nil
+}
+
+func containsSearchTerm(comic *c.Comic, searchTerm string) bool {
+  return strings.Contains(comic.SafeTitle, searchTerm) ||
+    strings.Contains(comic.Transcript, searchTerm) ||
+    strings.Contains(comic.Title, searchTerm)
+}
+
+func printIfMatchesSearch(name string, searchTerm string) {
+  comic, err := getComic(name)
+  if err != nil {
+    fmt.Printf("xkcd: failed to get comic file '%s': %s\n", name, err)
+    return
+  }
+
+  if containsSearchTerm(comic, searchTerm) {
+    fmt.Printf("URL: https://xkcd.com/%d\n", comic.Num)
+    fmt.Printf("Transcript: %s\n", comic.Transcript)
+    fmt.Println()
+  }
 }
 
 func main() {
@@ -76,25 +96,13 @@ func main() {
 
   comicsIterator, err := dir.Readdir(-1)
   if err != nil {
-    fmt.Println("xkcd: failed to readdir ~/.xkcd folder")
+    fmt.Println("xkcd: failed to readdir ~/.xkcd folder", err)
     os.Exit(1)
   }
 
   for _, comicFile := range comicsIterator {
     if comicFile.Mode().IsRegular() {
-      comic, err := getComic(comicFile.Name())
-      if err != nil {
-        fmt.Printf("xkcd: failed to get comic file '%s'\n", comicFile.Name())
-        continue
-      }
-
-      if strings.Contains(comic.SafeTitle, args.SearchTerm) ||
-        strings.Contains(comic.Transcript, args.SearchTerm) ||
-        strings.Contains(comic.Title, args.SearchTerm) {
-          fmt.Printf("URL: https://xkcd.com/%d\n", comic.Num)
-          fmt.Printf("Transcript: %s\n", comic.Transcript)
-          fmt.Println()
-        }
+      printIfMatchesSearch(comicFile.Name(), args.SearchTerm)
     }
   }
 }
