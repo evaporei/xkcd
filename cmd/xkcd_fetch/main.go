@@ -11,6 +11,7 @@ import (
   "time"
 
   c "github.com/evaporei/xkcd/comic"
+  d "github.com/evaporei/xkcd/dir"
 )
 
 // Does a GET request and return its body
@@ -63,23 +64,6 @@ func fetchComic(num int) (*c.Comic, error) {
   return &comicInfo, nil
 }
 
-// create ~/.xkcd folder
-func setupXkcdFolder() error {
-  xkcdFolder, err := c.GetXkcdFolder()
-  if err != nil {
-    return err
-  }
-
-  // check if it exists already
-  _, err = os.Stat(xkcdFolder)
-
-  if errors.Is(err, os.ErrNotExist) {
-    err = os.Mkdir(xkcdFolder, os.ModePerm)
-  }
-
-  return err
-}
-
 // store comic into file system
 func saveComic(comic *c.Comic) error {
   contentBytes, err := json.Marshal(comic)
@@ -87,7 +71,7 @@ func saveComic(comic *c.Comic) error {
     return err
   }
 
-  xkcdFolder, err := c.GetXkcdFolder()
+  xkcdFolder, err := d.GetXkcdFolder()
   if err != nil {
     return err
   }
@@ -124,7 +108,7 @@ func main() {
 
   fmt.Println("last comic number:", lastComic.Num)
 
-  err = setupXkcdFolder()
+  err = d.SetupXkcdFolder()
   if err != nil {
     fmt.Printf("xkcd_fetch: failed create ~/.xkcd folder: %s\n", err)
     os.Exit(1)

@@ -8,6 +8,7 @@ import (
   "strings"
 
   c "github.com/evaporei/xkcd/comic"
+  d "github.com/evaporei/xkcd/dir"
 )
 
 type Args struct {
@@ -27,23 +28,9 @@ func parseArgs() *Args {
   }
 }
 
-func openXkcdDir() (*os.File, error) {
-  xkcdFolder, err := c.GetXkcdFolder()
-  if err != nil {
-    return nil, err
-  }
-
-  dir, err := os.Open(xkcdFolder)
-  if err != nil {
-    return nil, err
-  }
-
-  return dir, nil
-}
-
 // get comic from index/storage (~/.xkcd)
 func getComic(name string) (*c.Comic, error) {
-  xkcdFolder, err := c.GetXkcdFolder()
+  xkcdFolder, err := d.GetXkcdFolder()
   if err != nil {
     return nil, err
   }
@@ -86,7 +73,7 @@ func printIfMatchesSearch(name string, searchTerm string) {
 func main() {
   args := parseArgs()
 
-  dir, err := openXkcdDir()
+  dir, err := d.OpenXkcdDir()
   if err != nil {
     fmt.Println("xkcd: failed to open ~/.xkcd folder:", err)
     os.Exit(1)
