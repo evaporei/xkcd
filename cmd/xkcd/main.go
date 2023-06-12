@@ -10,7 +10,11 @@ import (
   "github.com/evaporei/xkcd/comic"
 )
 
-func main() {
+type Args struct {
+  SearchTerm string
+}
+
+func parseArgs() *Args {
   args := os.Args[1:]
 
   if len(args) != 1 {
@@ -18,7 +22,13 @@ func main() {
     os.Exit(1)
   }
 
-  searchTerm := args[0]
+  return &Args{
+    SearchTerm: args[0],
+  }
+}
+
+func main() {
+  args := parseArgs()
 
   xkcdFolder, err := comic.GetXkcdFolder()
   if err != nil {
@@ -55,11 +65,12 @@ func main() {
         os.Exit(1)
       }
 
-      if strings.Contains(comicInfo.SafeTitle, searchTerm) ||
-        strings.Contains(comicInfo.Transcript, searchTerm) ||
-        strings.Contains(comicInfo.Title, searchTerm) {
+      if strings.Contains(comicInfo.SafeTitle, args.SearchTerm) ||
+        strings.Contains(comicInfo.Transcript, args.SearchTerm) ||
+        strings.Contains(comicInfo.Title, args.SearchTerm) {
           fmt.Printf("URL: https://xkcd.com/%d\n", comicInfo.Num)
           fmt.Printf("Transcript: %s\n", comicInfo.Transcript)
+          fmt.Println()
         }
     }
   }
