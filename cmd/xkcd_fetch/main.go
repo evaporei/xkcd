@@ -9,14 +9,9 @@ import (
   "os"
   "path/filepath"
   "time"
-)
 
-type ComicInfo struct {
-  Num int `json:"num"`
-	SafeTitle string `json:"safe_title"`
-	Transcript string `json:"transcript"`
-	Title string `json:"title"`
-}
+  "github.com/evaporei/xkcd/comic"
+)
 
 // Does a GET request and return its body
 func fetchBody(url string) ([]byte, error) {
@@ -37,11 +32,11 @@ func fetchBody(url string) ([]byte, error) {
   return body, nil
 }
 
-func fetchLastComic() (*ComicInfo, error) {
+func fetchLastComic() (*comic.ComicInfo, error) {
   return fetchComic(0)
 }
 
-func fetchComic(num int) (*ComicInfo, error) {
+func fetchComic(num int) (*comic.ComicInfo, error) {
   comicUrl := fmt.Sprintf("https://xkcd.com/%d/info.0.json", num)
 
   // fetch last comic
@@ -58,7 +53,7 @@ func fetchComic(num int) (*ComicInfo, error) {
     return nil, err
   }
 
-  comicInfo := ComicInfo{}
+  comicInfo := comic.ComicInfo{}
   err = json.Unmarshal(body, &comicInfo)
   if err != nil {
     return nil, err
@@ -67,18 +62,9 @@ func fetchComic(num int) (*ComicInfo, error) {
   return &comicInfo, nil
 }
 
-func getXkcdFolder() (string, error) {
-  homeDir, err := os.UserHomeDir()
-  if err != nil {
-    return "", err
-  }
-
-  return filepath.Join(homeDir, ".xkcd"), nil
-}
-
 // create ~/.xkcd folder
 func setupXkcdFolder() error {
-  xkcdFolder, err := getXkcdFolder()
+  xkcdFolder, err := comic.GetXkcdFolder()
   if err != nil {
     return err
   }
@@ -94,13 +80,13 @@ func setupXkcdFolder() error {
 }
 
 // store comic into file system
-func saveComic(comic *ComicInfo) error {
+func saveComic(comic *comic.ComicInfo) error {
   contentBytes, err := json.Marshal(comic)
   if err != nil {
     return err
   }
 
-  xkcdFolder, err := getXkcdFolder()
+  xkcdFolder, err := comic.GetXkcdFolder()
   if err != nil {
     return err
   }
