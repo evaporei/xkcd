@@ -1,11 +1,8 @@
 package main
 
 import (
-  "encoding/json"
   "fmt"
   "os"
-  "path/filepath"
-  "strings"
 
   c "github.com/evaporei/xkcd/comic"
   d "github.com/evaporei/xkcd/dir"
@@ -28,42 +25,14 @@ func parseArgs() *Args {
   }
 }
 
-// get comic from index/storage (~/.xkcd)
-func getComic(name string) (*c.Comic, error) {
-  xkcdFolder, err := d.GetXkcdFolder()
-  if err != nil {
-    return nil, err
-  }
-
-  fullPath := filepath.Join(xkcdFolder, name)
-  contents, err := os.ReadFile(fullPath)
-  if err != nil {
-    return nil, err
-  }
-
-  comic := c.Comic{}
-  err = json.Unmarshal(contents, &comic)
-  if err != nil {
-    return nil, err
-  }
-
-  return &comic, nil
-}
-
-func containsSearchTerm(comic *c.Comic, searchTerm string) bool {
-  return strings.Contains(comic.SafeTitle, searchTerm) ||
-    strings.Contains(comic.Transcript, searchTerm) ||
-    strings.Contains(comic.Title, searchTerm)
-}
-
 func printIfMatchesSearch(name string, searchTerm string) {
-  comic, err := getComic(name)
+  comic, err := c.GetComic(name)
   if err != nil {
     fmt.Printf("xkcd: failed to get comic file '%s': %s\n", name, err)
     return
   }
 
-  if containsSearchTerm(comic, searchTerm) {
+  if comic.ContainsTerm(searchTerm) {
     fmt.Printf("URL: https://xkcd.com/%d\n", comic.Num)
     fmt.Printf("Transcript: %s\n", comic.Transcript)
     fmt.Println()
